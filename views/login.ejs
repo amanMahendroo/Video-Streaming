@@ -1,0 +1,65 @@
+<nav>
+    <div class="nav-wrapper grey darken-4 row">
+        <div class="col s1 offset-s1 right-align">
+            <img src="https://i.ibb.co/ZTKVZ9y/logo.png" width="50px" style="margin-top: 5px;"/>
+        </div>
+        <a href="#" class="brand-logo col s4 hide-on-med-and-down">Nutflix</a>
+    </div>
+</nav>
+
+<div class="row" style="margin-bottom: 15vh;">
+    <h1 class="col s8 white-text">Login</h1>
+</div>
+
+<div class="row grey darken-4" style="margin: 50px 0;">
+    <input id="usr" class="col s8 offset-s2 teal-text" type="text" placeholder="Username" style="font-size: 2em;"/>
+</div>
+
+<div class="row grey darken-4" style="margin: 50px 0;">
+    <input id="pwd" class="col s8 offset-s2 teal-text" type="password" placeholder="Password" style="font-size: 2em;"/>
+</div>
+
+<div class="row grey darken-4" style="padding: 0 0 10vh 0; margin: 50px 0;">
+    <a class="waves-effect waves-light btn col s2 offset-s8" onclick="validate()">LOGIN</a>
+</div>
+
+<div id="warning-container" class="row scale-transition scale-out">
+    <div id="warning" class="col s8 offset-s2 teal lighten-2 white-text" style="height: 50px; line-height:50px; font-size: 1.4rem"></div>
+</div>
+
+<script>
+
+    function giveAlert(msg) {
+        let parent = document.getElementById('warning-container')
+        let child = document.getElementById('warning')
+        child.innerText = msg
+        parent.classList.remove('scale-out')
+        setTimeout(() => {
+            parent.classList.add('scale-out')
+        }, 3000)
+    }
+
+    function validate() {
+        let usr = document.getElementById('usr').value;
+        let pwd = document.getElementById('pwd').value;
+        let usr_valid = new RegExp('.+@.+\..+')
+        let pwd_valid = new RegExp('[a-z]')
+        if (usr_valid.test(usr) && pwd_valid.test(pwd)) {
+            localStorage.setItem("loggedIn",true)
+            window.location.href = '/search'
+        } else if (usr_valid.test(usr)) {
+            giveAlert("Password invalid")
+        } else if (pwd_valid.test(pwd)) {
+            giveAlert("Username invalid")
+        } else {
+            giveAlert("Username and password invalid")
+        }
+    }
+
+    window.onload = () => {
+        if (localStorage.getItem("loggedIn")) {
+            window.location.href = "/search"
+        }
+    }
+    window.addEventListener('keydown', (e) => { if (e.keyCode == 13) validate() })
+</script>

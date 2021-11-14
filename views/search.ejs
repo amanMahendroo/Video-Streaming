@@ -1,0 +1,158 @@
+<nav>
+    <div class="nav-wrapper grey darken-4 row">
+        <div class="col s1 offset-s1 right-align">
+            <img src="https://i.ibb.co/ZTKVZ9y/logo.png" width="50px" style="margin-top: 5px;"/>
+        </div>
+        <a href="#" class="brand-logo col s2 hide-on-med-and-down">Nutflix</a>
+        <ul id="nav-mobile" class="right hide-on-small">
+            <li><a onclick="logout()">Logout</a></li>
+        </ul>
+    </div>
+</nav>
+
+<div class="row grey darken-4" style="margin: 50px 0;">
+    <input class="col s8 offset-s2 teal-text" id="search" type="text" placeholder="Search for videos" style="font-size: 2em;"/>
+    <label class="label-icon" for="search"><i class="material-icons">search</i></label>
+</div>
+
+<div class="row">
+    <div class="col s10 offset-s1" id="panel">
+    </div>
+</div>
+
+<div id="warning-container" class="row scale-transition scale-out" style="position: fixed; bottom: 0; width: 100vw;">
+    <div id="warning" class="col s8 offset-s2 teal lighten-2 white-text" style="height: 50px; line-height:50px; font-size: 1.4rem">Hello</div>
+</div>
+
+<script>
+    
+    function createEl(type, cl, txt) {
+        let el = document.createElement(type)
+        if (cl){
+            cl = cl.trim().split(" ")
+            for (const c of cl) {
+                el.classList.add(c)
+            }
+            // el.classList.add(cl)
+        }
+        if (txt)
+            el.innerText = txt
+        return el
+    }
+
+    function dateParse(date) {
+        return date
+    }
+
+    function getThumb(vidInfo) {
+        console.log("Rendering", vidInfo)
+        let a = createEl('a')
+        a.href = `/view/${vidInfo.id.videoId}` 
+        let outer = createEl('div', "col s4")
+        let inner = createEl('div', "card grey darken-4 white-text")
+        let image = createEl('div', "card-image")
+        let img = createEl('img')
+        img.src = vidInfo.snippet.thumbnails.high.url
+        let title = createEl('span', 'card-title', vidInfo.snippet.title)
+        image.appendChild(img)
+        image.appendChild(title)
+        let content = createEl('div', "card-content")
+        let desc = createEl('p', undefined, vidInfo.snippet.description)
+        let channel = createEl('h6', undefined, vidInfo.snippet.channelTitle)
+        content.appendChild(desc)
+        content.appendChild(channel)
+        inner.appendChild(image)
+        inner.appendChild(content)
+        outer.appendChild(inner)
+        a.appendChild(outer)
+        return a
+    }
+
+    function renderResults(res) {
+        let panel = document.getElementById('panel')
+        while (panel.lastChild) {
+            panel.removeChild(panel.lastChild)
+        }
+        for (const vid of res.items) {
+            console.log("Video", vid)
+            panel.appendChild(getThumb(vid))
+        }
+    }
+
+    function giveAlert(msg) {
+        let parent = document.getElementById('warning-container')
+        let child = document.getElementById('warning')
+        child.innerText = msg
+        parent.classList.remove('scale-out')
+        setTimeout(() => {
+            parent.classList.add('scale-out')
+        }, 3000)
+    }
+
+    function loadClient() {
+        // console.log(gapi.client)
+        gapi.client.setApiKey("");
+        return gapi.client.load("https://www.googleapis.com/discovery/v1/apis/youtube/v3/rest")
+        .then(function() { 
+            giveAlert("GAPI client loaded for API"); 
+        },
+        function(err) { 
+            giveAlert("Error loading GAPI client for API");
+            console.log(err) 
+        });
+    }
+
+    function execute(header) {
+        return gapi.client.youtube.search.list(header)
+        .then(function(response) {
+            console.log("Response", response);
+            renderResults(response.result)
+        },
+        function(err) { 
+            giveAlert("Execute error"); 
+            console.log(err)
+        });
+    }
+    
+    function doTheThing() {
+        let query = document.getElementById("search").value
+        let header = {
+            "part": ["snippet"],
+            "maxResults": 9,
+            "q": query,
+            "type": ["video"]
+        }
+        console.log("sending", header)
+        execute(header)
+    }
+
+    function logout() {
+        localStorage.removeItem("loggedIn")
+        window.location.href = '/login'
+    }
+
+    window.onload = () => {
+        if (!localStorage.getItem("loggedIn")) {
+            window.location.href = '/login'
+        }
+        loadClient()
+    }
+    window.addEventListener('keydown', (e) => { if (e.keyCode == 13) doTheThing() })
+</script>
+
+<!-- 
+    result: object
+    | items: array
+    | | id: object
+    | | | videoId: string
+    | | snippet: object
+    | | | publishedAt: string
+    | | | title: string
+    | | | description: string
+    | | | thumbnails: object
+    | | | | high: object
+    | | | | | url: string
+    | | | | | width: integer
+    | | | | | height: integer
+    | | | channelTitle: string
+ -->
